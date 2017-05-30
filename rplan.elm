@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Json.Decode exposing (field, int, string, Decoder)
+import Json.Decode exposing (null, field, int, string, Decoder)
 import Html exposing (text, div, input, button, p, Html)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
@@ -23,6 +23,7 @@ setPassword model value =
     { model | password = value }
 
 type Msg = SetField Setter String
+         | Login
 
 init : ( Model, Cmd Msg )
 init = ( { username = "", password = ""}, Cmd.none )
@@ -32,10 +33,20 @@ update msg model =
     case msg of
         SetField setter value ->
             ( setter model value, Cmd.none )
+        Login ->
+            (model, Cmd.none )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
+
+--login : String -> String -> Cmd Msg
+--login username password =
+    --Http.post
+        --null
+        --"http://localhost:8081/api/auth/token"
+        --( string """{ "grant_type": "password", "username": "a@a", "password": "asdfasdfasdf"}""")
+        --|> Http.send
 
 main : Program Never Model Msg
 main =
@@ -52,6 +63,6 @@ view model =
         [ text "Login"
         , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
         , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
-        , button [] [ text "Login" ]
+        , button [onClick Login] [ text "Login" ]
         ]
 
