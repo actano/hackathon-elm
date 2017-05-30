@@ -79,10 +79,20 @@ main =
 view : Model -> Html Msg
 view model =
     div []
-        [ text "Login"
-        , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
-        , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
-        , button [onClick Login] [ text "Login" ]
-        , div [] [ text model.errorMessage ]
-        ]
+        (renderLoginOrPlaceholder model)
 
+renderLoginOrPlaceholder : Model -> List (Html Msg)
+renderLoginOrPlaceholder model =
+    let
+        nodeList = case model.accessToken of
+            Just _ ->
+                [ text "You are logged in" ]
+            Nothing ->
+                [ text "Login"
+                , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
+                , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
+                , button [onClick Login] [ text "Login" ]
+                , div [] [ text model.errorMessage ]
+                ]
+    in
+        nodeList
