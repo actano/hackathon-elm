@@ -55,7 +55,7 @@ login : String -> String -> Cmd Msg
 login username password =
     Http.post
         "http://localhost:8081/api/auth/token"
-        (stringBody "application/json" """{ "grant_type": "password", "username": "a@a", "password": "asdfasdfasdf"}""")
+        (stringBody "application/json" ("{ \"grant_type\": \"password\", \"username\": \"" ++ username ++ "\" , \"password\": \"" ++ password ++ "\"}"))
         (null ())
         |> Http.send LoginResult
 
