@@ -12,6 +12,7 @@ type alias Model =
     { username: String
     , password: String
     , errorMessage: String
+    , accessToken: Maybe String
     }
 type alias Setter = Model -> String -> Model
 
@@ -25,12 +26,13 @@ setPassword model value =
 
 type Msg = SetField Setter String
          | Login
-         | LoginResult (Result Http.Error ())
+         | LoginResult (Result Http.Error String)
 
 init : ( Model, Cmd Msg )
 init = ( { username = ""
          , password = ""
          , errorMessage = ""
+         , accessToken = Nothing
          }
        , Cmd.none
        )
@@ -44,7 +46,7 @@ update msg model =
             (model, (login model.username model.password))
         LoginResult result ->
             case result of
-                Ok () -> ( model, Cmd.none )
+                Ok token -> ( { model | accessToken = (Just token) }, Cmd.none )
                 Err err ->
                   case err of
                     BadUrl errMsg -> ( { model | errorMessage = ("bad url: " ++ errMsg )}, Cmd.none )
@@ -62,7 +64,7 @@ login username password =
     Http.post
         "http://localhost:8081/api/auth/token"
         (stringBody "application/json" ("{ \"grant_type\": \"password\", \"username\": \"" ++ username ++ "\" , \"password\": \"" ++ password ++ "\"}"))
-        (null ())
+        (field "access_token" string)
         |> Http.send LoginResult
 
 main : Program Never Model Msg
