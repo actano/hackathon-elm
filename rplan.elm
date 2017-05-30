@@ -82,7 +82,7 @@ view model =
         [ text "Login"
         , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
         , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
-        , div [] [ text model.errorMessage ]
         , button [onClick Login] [ text "Login" ]
+        , div [] [ text model.errorMessage ]
         ]
 
