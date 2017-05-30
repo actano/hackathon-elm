@@ -5,12 +5,13 @@ import Html exposing (text, div, input, button, p, Html)
 import Html.Attributes exposing (..)
 import Html.Events exposing (onClick, onInput)
 import Html exposing (program)
-import Http exposing (get, Error, Response, Error(..))
+import Http exposing (get, stringBody, Error, Response, Error(..))
 import Task
 
 type alias Model =
     { username: String
     , password: String
+    , errorMessage: String
     }
 type alias Setter = Model -> String -> Model
 
@@ -24,9 +25,15 @@ setPassword model value =
 
 type Msg = SetField Setter String
          | Login
+         | LoginResult (Result Http.Error ())
 
 init : ( Model, Cmd Msg )
-init = ( { username = "", password = ""}, Cmd.none )
+init = ( { username = ""
+         , password = ""
+         , errorMessage = ""
+         }
+       , Cmd.none
+       )
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -34,19 +41,23 @@ update msg model =
         SetField setter value ->
             ( setter model value, Cmd.none )
         Login ->
-            (model, Cmd.none )
+            (model, (login model.username model.password))
+        LoginResult result ->
+            case result of
+                Ok () -> ( model, Cmd.none )
+                Err err -> ( { model | errorMessage = "network error" }, Cmd.none )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
     Sub.none
 
---login : String -> String -> Cmd Msg
---login username password =
-    --Http.post
-        --null
-        --"http://localhost:8081/api/auth/token"
-        --( string """{ "grant_type": "password", "username": "a@a", "password": "asdfasdfasdf"}""")
-        --|> Http.send
+login : String -> String -> Cmd Msg
+login username password =
+    Http.post
+        "http://localhost:8081/api/auth/token"
+        (stringBody "application/json" """{ "grant_type": "password", "username": "a@a", "password": "asdfasdfasdf"}""")
+        (null ())
+        |> Http.send LoginResult
 
 main : Program Never Model Msg
 main =
@@ -63,6 +74,7 @@ view model =
         [ text "Login"
         , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
         , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
+        , div [] [ text model.errorMessage ]
         , button [onClick Login] [ text "Login" ]
         ]
 
