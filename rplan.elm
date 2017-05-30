@@ -45,7 +45,13 @@ update msg model =
         LoginResult result ->
             case result of
                 Ok () -> ( model, Cmd.none )
-                Err err -> ( { model | errorMessage = "network error" }, Cmd.none )
+                Err err ->
+                  case err of
+                    BadUrl errMsg -> ( { model | errorMessage = ("bad url: " ++ errMsg )}, Cmd.none )
+                    Timeout -> ( { model | errorMessage = "timeout"}, Cmd.none )
+                    NetworkError -> ( { model | errorMessage = "network error"}, Cmd.none )
+                    BadStatus response -> ( { model | errorMessage = ("bad status: " ++ (toString response.status) ++ ", " ++ response.body) }, Cmd.none )
+                    BadPayload dbgMsg response ->  ( { model | errorMessage = ("bad payload: " ++ dbgMsg ++ ", " ++ (toString response.status) ++ ", " ++ response.body) }, Cmd.none )
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -70,7 +76,7 @@ main =
 
 view : Model -> Html Msg
 view model =
-    div [] 
+    div []
         [ text "Login"
         , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
         , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
