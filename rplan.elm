@@ -123,7 +123,7 @@ renderLoginOrPlaceholder model =
                 , button [onClick Logout ] [ text "Logout" ]
                 ]
             Nothing ->
-                [ text "Login"
+                [ text "Login "
                 , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
                 , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
                 , button [onClick Login] [ text "Login" ]
