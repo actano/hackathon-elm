@@ -13,9 +13,14 @@ type alias Model =
     , password: String
     }
 type alias Setter = Model -> String -> Model
+
 setUsername : Setter
 setUsername model value =
     { model | username = value }
+
+setPassword : Setter
+setPassword model value =
+    { model | password = value }
 
 type Msg = SetField Setter String
 
@@ -46,7 +51,7 @@ view model =
     div [] 
         [ text "Login"
         , input [placeholder "Username", value model.username, onInput (SetField setUsername)] []
-        , input [type_ "password", placeholder "Password"] []
+        , input [type_ "password", placeholder "Password", value model.password, onInput (SetField setPassword)] []
         , button [] [ text "Login" ]
         ]
 
