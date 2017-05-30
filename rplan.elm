@@ -14,10 +14,12 @@ type alias Model =
     , errorMessage: String
     , accessToken: Maybe AccessToken
     , userHomeId: Maybe UserHomeId
+    , workingSet: Maybe WorkingSet
     }
 type alias Setter = Model -> String -> Model
 type alias AccessToken = String
 type alias UserHomeId = String
+type alias WorkingSet = List String
 
 setUsername : Setter
 setUsername model value =
@@ -32,6 +34,7 @@ type Msg = SetField Setter String
          | LoginResult (Result Http.Error AccessToken)
          | SetUserHomeId (Result Http.Error UserHomeId)
          | Logout
+         | SetWorkingSet (Result Http.Error WorkingSet)
 
 init : ( Model, Cmd Msg )
 init = ( { username = ""
@@ -39,6 +42,7 @@ init = ( { username = ""
          , errorMessage = ""
          , accessToken = Nothing
          , userHomeId = Nothing
+         , workingSet = Nothing
          }
        , Cmd.none
        )
@@ -65,8 +69,17 @@ update msg model =
                 Ok token -> ( { model | accessToken = (Just token) }, getUserHome token )
                 Err err -> setError err model
         SetUserHomeId result ->
+            let
+                token = case model.accessToken of
+                    Just token -> token
+                    Nothing -> ""
+            in
+                case result of
+                    Ok userHomeId -> ( { model | userHomeId = (Just userHomeId) }, getWorkingSet token userHomeId )
+                    Err err -> setError err model
+        SetWorkingSet result ->
             case result of
-                Ok userHomeId -> ( { model | userHomeId = (Just userHomeId) }, Cmd.none )
+                Ok workingSet -> ( { model | workingSet = (Just workingSet) }, Cmd.none )
                 Err err -> setError err model
         Logout ->
             ({ model | accessToken = Nothing }, Cmd.none)
@@ -98,6 +111,19 @@ getUserHome accessToken =
      }
         |> Http.send SetUserHomeId
 
+getWorkingSet : AccessToken -> UserHomeId -> Cmd Msg
+getWorkingSet accessToken userHomeId =
+    Http.request
+     { method = "GET"
+     , headers = [(Http.header "Authorization" ("Bearer " ++ accessToken))]
+     , url = "http://localhost:8081/statestorage/schedulemanager.workingset"
+     , body = Http.emptyBody
+     , expect = Http.expectJson (field "schedulemanager.workingset" (Json.Decode.list string))
+     , timeout = Nothing
+     , withCredentials = False
+     }
+        |> Http.send SetWorkingSet
+
 
 main : Program Never Model Msg
 main =
@@ -119,8 +145,9 @@ renderLoginOrPlaceholder model =
         nodeList = case model.accessToken of
             Just _ ->
                 [ text "You are logged in"
-                , div [] [ text (toString model.userHomeId) ]
                 , button [onClick Logout ] [ text "Logout" ]
+                , div [] [ text (toString model.userHomeId) ]
+                , div [] [ text (toString model.workingSet) ]
                 ]
             Nothing ->
                 [ text "Login "
