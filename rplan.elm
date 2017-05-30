@@ -31,6 +31,7 @@ type Msg = SetField Setter String
          | Login
          | LoginResult (Result Http.Error AccessToken)
          | SetUserHomeId (Result Http.Error UserHomeId)
+         | Logout
 
 init : ( Model, Cmd Msg )
 init = ( { username = ""
@@ -67,6 +68,8 @@ update msg model =
             case result of
                 Ok userHomeId -> ( { model | userHomeId = (Just userHomeId) }, Cmd.none )
                 Err err -> setError err model
+        Logout ->
+            ({ model | accessToken = Nothing }, Cmd.none)
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
@@ -117,6 +120,7 @@ renderLoginOrPlaceholder model =
             Just _ ->
                 [ text "You are logged in"
                 , div [] [ text (toString model.userHomeId) ]
+                , button [onClick Logout ] [ text "Logout" ]
                 ]
             Nothing ->
                 [ text "Login"
